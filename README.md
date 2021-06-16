@@ -1,6 +1,7 @@
 # HordeRush
  A 2D zombie horde fighting game
- A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/tommyettinger/gdx-liftoff).
+
+A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/tommyettinger/gdx-liftoff).
 
 Project template includes simple launchers and a `Game` extension that sets the first screen.
 

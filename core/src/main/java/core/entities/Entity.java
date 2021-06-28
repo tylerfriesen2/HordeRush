@@ -31,6 +31,10 @@ public class Entity {
         return sprite.getHeight();
     }
 
+    public float getRadius() {
+        return (sprite.getWidth() + sprite.getHeight()) / 2;
+    }
+
     public float getX() {
         return sprite.getX();
     }

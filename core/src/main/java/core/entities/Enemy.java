@@ -1,9 +1,31 @@
 package core.entities;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Timer;
+import core.GameClass;
+
 public class Enemy extends Entity {
 
-    protected float health = 1, stateTime = 0, theta = 0, vel = 0.75f;
-    protected boolean alive = true, dangerous = true;
+    protected float health = 1, maxhealth = 1, stateTime = 0, theta = 0, vel = 0.75f;
+    protected boolean alive = true, dangerous = true, disposable = false;
+    protected Sprite healthbar;
+
+    public Enemy() {
+        super();
+
+        if (GameClass.getAssetManager().isLoaded(GameClass.getAssets().get("healthbar"), Texture.class)) {
+            healthbar = new Sprite(GameClass.getAssetManager().get(GameClass.getAssets().get("healthbar"), Texture.class));
+        } else {
+            healthbar = new Sprite(new Texture(GameClass.getAssets().get("healthbar")));
+        }
+
+        healthbar.setOrigin(0, healthbar.getOriginY());
+    }
+
 
     public void update(float delta, float playerx, float playery) {
         stateTime += delta;
@@ -11,6 +33,25 @@ public class Enemy extends Entity {
 
         float anglex = playerx - getX(), angley = playery - getY();
         theta = (float) Math.atan2(angley, anglex);
+
+        healthbar.setPosition(sprite.getX(), sprite.getY() + sprite.getHeight() + 4);
+
+        if (health <= 0) { die(); }
+    }
+
+    @Override
+    public void draw(SpriteBatch batch) {
+        super.draw(batch);
+
+        if (health < maxhealth) {
+            float scale = health / maxhealth * sprite.getWidth();
+            healthbar.setScale(MathUtils.clamp(scale, 0, sprite.getWidth()), 2);
+            healthbar.draw(batch);
+        }
+    }
+
+    public void die() {
+        setDisposable(true);
     }
 
     public float getHealth() {
@@ -21,8 +62,23 @@ public class Enemy extends Entity {
         this.health = health;
     }
 
+    public float getMaxhealth() {
+        return maxhealth;
+    }
+
+    public void setMaxhealth(float maxhealth) {
+        this.maxhealth = maxhealth;
+    }
+
     public void damage(float amount) {
         health -= amount;
+        sprite.setColor(new Color(1.0f, 0.5f, 0.5f, 1.0f));
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                sprite.setColor(Color.WHITE);
+            }
+        }, 0.25f);
     }
 
     public float getStateTime() {
@@ -53,11 +109,19 @@ public class Enemy extends Entity {
         return alive;
     }
 
+    public boolean isDangerous() {
+        return dangerous;
+    }
+
     public void setDangerous(boolean dangerous) {
         this.dangerous = dangerous;
     }
 
-    public boolean isDangerous() {
-        return dangerous;
+    public boolean isDisposable() {
+        return disposable;
+    }
+
+    public void setDisposable(boolean disposable) {
+        this.disposable = disposable;
     }
 }

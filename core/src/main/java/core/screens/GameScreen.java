@@ -5,14 +5,21 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.math.Vector3;
 import core.GameClass;
 import core.entities.Enemy;
 import core.entities.Player;
-import core.entities.Zombie;
+import core.entities.Walker;
+import core.hud.WeaponDisplay;
+import core.items.Item;
+import core.items.PistolAmmo;
+import core.items.RifleAmmo;
+import core.items.ShotgunAmmo;
 import core.projectiles.Projectile;
 import core.utils.Collisions;
+import core.utils.Point;
 import core.weapons.*;
 
 import java.util.ArrayList;
@@ -21,10 +28,13 @@ public class GameScreen implements Screen, InputProcessor {
 
     GameClass core;
 
+    OrthographicCamera cam;
+
     // Player variables
     Player player;
-    boolean left = false, right = false, up = false, down = false, leftmousedown = false, rightmousedown = false, sprint = false;
+    boolean left = false, right = false, up = false, down = false, leftmousedown = false, leftmouseup = false, rightmousedown = false, sprint = false;
     float xvel = 0, yvel = 0, maxxvel = 1, maxyvel = 1, accel = 0.2f, decel = 1.2f;
+    Vector3 mousePosition = new Vector3();
 
     // Weapon variables
     RangedWeapon[] rangedWeapons = new RangedWeapon[10];
@@ -34,22 +44,45 @@ public class GameScreen implements Screen, InputProcessor {
     boolean canFire = true, canHit = true;
     long leftmousedowntime = 0, rightmousedowntime = 0;
 
+    // HUD
+    WeaponDisplay weaponDisplay;
+
     ArrayList<Projectile> projectiles = new ArrayList<>();
     ArrayList<Enemy> enemies = new ArrayList<>();
+    ArrayList<Item> items = new ArrayList<>();
 
     public GameScreen(GameClass core) {
         this.core = core;
+
+        cam = new OrthographicCamera();
+        cam.setToOrtho(false, 640, 480);
+        cam.update();
+
+        core.getViewport().setCamera(cam);
+
         player = new Player();
         rangedWeapons[0] = new Pistol();
         rangedWeapons[1] = new Shotgun();
+        rangedWeapons[2] = new Rifle();
         rangedWeapon = rangedWeapons[currentWeapon];
+
+        weaponDisplay = new WeaponDisplay(Gdx.graphics.getWidth() - 4, 16);
     }
 
     public void pollInput() {
+        // Get mouse position
+        mousePosition = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+
+        if (leftmousedown) {
+            playerFire(cam.unproject(mousePosition));
+        }
+
         if (sprint) {
-            maxxvel = 1.5f; maxyvel = 1.5f;
+            maxxvel = 2f;
+            maxyvel = 2f;
         } else {
-            maxxvel = 1f; maxyvel = 1f;
+            maxxvel = 1f;
+            maxyvel = 1f;
         }
 
         if (!left && !right) {
@@ -134,8 +167,20 @@ public class GameScreen implements Screen, InputProcessor {
     }
 
     public void update(float delta) {
+        // Do actions
+        if (core.getActionHandler().run()) {
+
+        }
+
+        // Update HUD
+        weaponDisplay.update(rangedWeapon);
+
         // Move player
         player.update(xvel, yvel);
+
+        // Update camera
+        cam.position.set(player.getX() + player.getWidth() / 2, player.getY() + player.getHeight() / 2, 0);
+        cam.update();
 
         // Change weapons
         if (currentWeapon != nextWeapon) {
@@ -156,8 +201,9 @@ public class GameScreen implements Screen, InputProcessor {
         // Update enemies
         for (int i = enemies.size() - 1; i >= 0; --i) {
             Enemy e = enemies.get(i);
-            if (!e.isAlive()) {
+            if (e.isDisposable()) {
                 enemies.remove(e);
+                dropLoot(e.getX(), e.getY());
             } else {
                 e.update(delta, player.getX() + player.getWidth() / 2, player.getY() + player.getHeight() / 2);
             }
@@ -170,7 +216,7 @@ public class GameScreen implements Screen, InputProcessor {
                 if (e1 == e2) {
                     continue;
                 } else if (Intersector.overlaps(e1.getBoundingRectangle(), e2.getBoundingRectangle())) {
-                    Collisions.separateBoth(e1, e2);
+                    Collisions.twoWaySeparation(e1, e2);
                 }
             }
         }
@@ -189,40 +235,101 @@ public class GameScreen implements Screen, InputProcessor {
             }
         }
 
+        // Detect collisions between enemies and the player
+        for (int i = enemies.size() - 1; i >= 0; --i) {
+            Enemy e = enemies.get(i);
+            if (Intersector.overlaps(e.getBoundingRectangle(), player.getBoundingRectangle())) {
+                Collisions.oneWaySeparation(player, e);
+            }
+        }
+
+        // Detect collisions between items and the player
+        for (int i = items.size() - 1; i >= 0; --i) {
+            Item e = items.get(i);
+            if (Intersector.overlaps(e.getBoundingRectangle(), player.getBoundingRectangle())) {
+                if (e instanceof PistolAmmo) {
+                    for (int j = 0; j < rangedWeapons.length; ++j) {
+                        if (rangedWeapons[j] instanceof Pistol) {
+                            rangedWeapons[j].setRounds(rangedWeapons[j].getRounds() + e.getQuantity());
+                        }
+                    }
+                }
+
+                if (e instanceof ShotgunAmmo) {
+                    for (int j = 0; j < rangedWeapons.length; ++j) {
+                        if (rangedWeapons[j] instanceof Shotgun) {
+                            rangedWeapons[j].setRounds(rangedWeapons[j].getRounds() + e.getQuantity());
+                        }
+                    }
+                }
+
+                if (e instanceof RifleAmmo) {
+                    for (int j = 0; j < rangedWeapons.length; ++j) {
+                        if (rangedWeapons[j] instanceof Rifle) {
+                            rangedWeapons[j].setRounds(rangedWeapons[j].getRounds() + e.getQuantity());
+                        }
+                    }
+                }
+
+                items.remove(e);
+            }
+        }
+
         // Spawn enemies
         spawnEnemies();
     }
 
     public void draw() {
-        core.getBatch().begin();
-        player.draw(core.getBatch());
+        core.getBatch(0).setProjectionMatrix(cam.combined);
+        core.getBatch(0).begin();
+        for (Item i : items) {
+            i.draw(core.getBatch(0));
+        }
         for (Projectile p : projectiles) {
-            p.draw(core.getBatch());
+            p.draw(core.getBatch(0));
         }
+        player.draw(core.getBatch(0));
         for (Enemy e : enemies) {
-            e.draw(core.getBatch());
+            e.draw(core.getBatch(0));
         }
-        core.getBatch().end();
+        core.getBatch(0).end();
+
+        core.getBatch(1).begin();
+        weaponDisplay.draw(core.getBatch(1));
+        core.getBatch(1).end();
     }
 
-    public void playerFire(float mousex, float mousey) {
+    public void playerFire(Vector3 position) {
         if (System.currentTimeMillis() - leftmousedowntime > rangedWeapon.getCooldown()) {
             leftmousedowntime = System.currentTimeMillis();
-            canFire = true;
+
+            if (rangedWeapon.isSemi()) {
+                if (leftmouseup) {
+                    canFire = true;
+                }
+            } else {
+                canFire = true;
+            }
         }
 
-        if (!canFire) { return; }
+        if (!canFire) {
+            return;
+        }
+
+        if (rangedWeapon.getAmmo() == 0) {
+            rangedWeapon.reload();
+            return;
+        }
 
         canFire = false;
         float playerx = player.getX() + player.getWidth() / 2, playery = player.getY() + player.getHeight() / 2;
-        float anglex = mousex - playerx, angley = mousey - playery;
+        float anglex = position.x + 2 - playerx, angley = position.y + 2 - playery;
         float theta = (float) (Math.atan2(angley, anglex));
-        float spawnx = playerx + (float) (16 * Math.cos(theta)), spawny = playery + (float) (16 * Math.sin(theta));
         rangedWeapon.fire(projectiles, theta, playerx, playery, 8);
     }
 
     boolean spawning = true;
-    long lastSpawn = System.currentTimeMillis() + 2000;
+    long lastSpawn = System.currentTimeMillis();
 
     /**
      * Temporary method to spawn enemies
@@ -230,23 +337,46 @@ public class GameScreen implements Screen, InputProcessor {
     public void spawnEnemies() {
         if (spawning) {
             if (System.currentTimeMillis() - lastSpawn > 5000) {
+                float spawnx = player.getX() + (float) (Math.floor(Math.random() * 300 - 150)), spawny = player.getY() + (float) (Math.floor(Math.random() * 300 - 150));
+                if (Point.distance(new Point(spawnx, spawny), new Point(player.getX(), player.getY())) < 100) {
+                    return;
+                }
                 lastSpawn = System.currentTimeMillis();
-                float spawnx = (float) (Math.floor(Math.random() * 608 + 16)), spawny = (float) (Math.floor(Math.random() * 448 + 16));
                 spawnGroup(spawnx, spawny);
             }
         }
     }
 
     public void spawnGroup(float x, float y) {
-        int size = (int) Math.floor(Math.random() * 5 + 2);
+        int size = (int) Math.floor(Math.random() * 5 + 5);
         for (int i = 0; i < size; ++i) {
-            Zombie z = new Zombie(x, y);
-            Timer.schedule(new Timer.Task() {
-                @Override
-                public void run() {
-                    enemies.add(z);
-                }
-            }, 0.5f);
+            Walker w = new Walker(x + (float) (Math.floor(Math.random() * 20 - 10)), y + (float) (Math.floor(Math.random() * 20 - 10)));
+            enemies.add(w);
+        }
+    }
+
+    public void dropLoot(float x, float y) {
+        int type = (int) Math.floor(Math.random() * 5);
+        if (type > 0) {
+            int amount = (int) Math.floor(Math.random() * 5) + 1;
+            switch (type) {
+                case 1:
+                    PistolAmmo p = new PistolAmmo(amount);
+                    p.setPosition(x, y);
+                    items.add(p);
+                    break;
+                case 2:
+                    ShotgunAmmo s = new ShotgunAmmo(amount);
+                    s.setPosition(x, y);
+                    items.add(s);
+                    break;
+                case 3:
+                    RifleAmmo r = new RifleAmmo(amount);
+                    r.setPosition(x, y);
+                    items.add(r);
+                    break;
+                default: break;
+            }
         }
     }
 
@@ -257,7 +387,7 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         pollInput();
@@ -267,7 +397,7 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void resize(int width, int height) {
-        // Resize your screen here. The parameters represent the new window size.
+        core.getViewport().update(width, height);
     }
 
     @Override
@@ -305,6 +435,9 @@ public class GameScreen implements Screen, InputProcessor {
             case Input.Keys.S:
                 down = true;
                 break;
+            case Input.Keys.R:
+                rangedWeapon.reload();
+                break;
             case Input.Keys.SHIFT_LEFT:
                 sprint = true;
                 break;
@@ -313,6 +446,9 @@ public class GameScreen implements Screen, InputProcessor {
                 break;
             case Input.Keys.NUM_2:
                 nextWeapon = 1;
+                break;
+            case Input.Keys.NUM_3:
+                nextWeapon = 2;
                 break;
             case Input.Keys.BACKSPACE:
                 spawning = !spawning;
@@ -356,7 +492,7 @@ public class GameScreen implements Screen, InputProcessor {
         switch (button) {
             case Input.Buttons.LEFT:
                 leftmousedown = true;
-                playerFire(screenX, Gdx.graphics.getHeight() - screenY);
+                leftmouseup = false;
                 break;
             default:
                 break;
@@ -368,6 +504,7 @@ public class GameScreen implements Screen, InputProcessor {
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         switch (button) {
             case Input.Buttons.LEFT:
+                if (leftmousedown) { leftmouseup = true; }
                 leftmousedown = false;
                 break;
             default:
@@ -388,6 +525,7 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
+        cam.zoom += amountY / 10;
         return false;
     }
 }

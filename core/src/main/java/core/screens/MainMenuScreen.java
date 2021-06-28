@@ -22,9 +22,9 @@ public class MainMenuScreen implements Screen {
 	public void render(float delta) {
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-		core.getBatch().begin();
+		core.getBatch(2).begin();
 
-		core.getBatch().end();
+		core.getBatch(2).end();
 	}
 
 	@Override

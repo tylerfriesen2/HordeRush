@@ -3,6 +3,7 @@ package core.projectiles;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 
 public class Projectile {
@@ -17,12 +18,10 @@ public class Projectile {
     }
 
     public void update() {
-        sprite.translate((float) (vel * Math.cos(theta)), (float) (vel * Math.sin(theta)));
+        float alpha = 1 - (float) (System.currentTimeMillis() - spawn) / lifetime;
 
-        if (sprite.getX() > Gdx.graphics.getWidth() || sprite.getX() < -sprite.getWidth() ||
-            sprite.getY() > Gdx.graphics.getHeight() || sprite.getY() < -sprite.getHeight()) {
-            alive = false;
-        }
+        sprite.setAlpha(MathUtils.clamp(alpha, 0, 1));
+        sprite.translate((float) (vel * Math.cos(theta)), (float) (vel * Math.sin(theta)));
 
         if (System.currentTimeMillis() - spawn > lifetime) {
             alive = false;

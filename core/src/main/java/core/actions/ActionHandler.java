@@ -17,7 +17,7 @@ public class ActionHandler {
         if (index >= queue.size()) { return true; }
         if (queue.get(index).run()) {
             ++index;
-            if (index >= queue.size()) { return true; }
+            return index >= queue.size();
         }
 
         return false;

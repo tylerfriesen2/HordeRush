@@ -7,13 +7,13 @@ import java.util.ArrayList;
 
 public class Shotgun extends RangedWeapon {
 
-    private int spreadcount = 12;
+    private int spreadcount = 10;
 
     public Shotgun() {
         setName("Shotgun");
         setCooldown(750);
         setLifetime(400);
-        setDamage(0.8f);
+        setDamage(0.6f);
         setVel(9.5f);
         setAmmo(12);
         setMagazine(12);

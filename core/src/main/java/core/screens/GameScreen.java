@@ -37,10 +37,9 @@ public class GameScreen implements Screen, InputProcessor {
     Vector3 mousePosition = new Vector3();
 
     // Weapon variables
-    RangedWeapon[] rangedWeapons = new RangedWeapon[10];
-    MeleeWeapon meleeWeapon;
-    RangedWeapon rangedWeapon;
-    int currentWeapon = 0, nextWeapon = 0;
+    Weapon[] weapons = new RangedWeapon[10];
+    Weapon equippedWeapon;
+    int currentWeapon = 0, nextWeapon = 0, availableWeapons = 0;
     boolean canFire = true, canHit = true;
     long leftmousedowntime = 0, rightmousedowntime = 0;
 
@@ -61,10 +60,16 @@ public class GameScreen implements Screen, InputProcessor {
         core.getViewport().setCamera(cam);
 
         player = new Player();
-        rangedWeapons[0] = new Pistol();
-        rangedWeapons[1] = new Shotgun();
-        rangedWeapons[2] = new Rifle();
-        rangedWeapon = rangedWeapons[currentWeapon];
+        weapons[0] = new Pistol();
+        weapons[1] = new Shotgun();
+        weapons[2] = new Rifle();
+        equippedWeapon = weapons[currentWeapon];
+
+        for (int i = 0; i < weapons.length; ++i) {
+            if (weapons[i] != null) {
+                ++availableWeapons;
+            }
+        }
 
         weaponDisplay = new WeaponDisplay(Gdx.graphics.getWidth() - 4, 16);
     }
@@ -168,12 +173,12 @@ public class GameScreen implements Screen, InputProcessor {
 
     public void update(float delta) {
         // Do actions
-        if (core.getActionHandler().run()) {
+        if (GameClass.getActionHandler().run()) {
             // Do things while the action queue is running
         }
 
         // Update HUD
-        weaponDisplay.update(rangedWeapon);
+        weaponDisplay.update(equippedWeapon);
 
         // Move player
         player.update(xvel, yvel);
@@ -183,12 +188,16 @@ public class GameScreen implements Screen, InputProcessor {
         cam.update();
 
         // Change weapons
-        if (!rangedWeapon.isReloading()) {
-            if (currentWeapon != nextWeapon) {
-                currentWeapon = nextWeapon;
-                rangedWeapon = rangedWeapons[currentWeapon];
+        if (equippedWeapon instanceof RangedWeapon) {
+            RangedWeapon w = (RangedWeapon) equippedWeapon;
+            if (!w.isReloading()) {
+                if (currentWeapon != nextWeapon) {
+                    currentWeapon = nextWeapon;
+                    equippedWeapon = weapons[currentWeapon];
+                }
             }
         }
+
 
         // Update projectiles
         for (int i = projectiles.size() - 1; i >= 0; --i) {
@@ -250,25 +259,28 @@ public class GameScreen implements Screen, InputProcessor {
             Item e = items.get(i);
             if (Intersector.overlaps(e.getBoundingRectangle(), player.getBoundingRectangle())) {
                 if (e instanceof PistolAmmo) {
-                    for (int j = 0; j < rangedWeapons.length; ++j) {
-                        if (rangedWeapons[j] instanceof Pistol) {
-                            rangedWeapons[j].setRounds(rangedWeapons[j].getRounds() + e.getQuantity());
+                    for (int j = 0; j < weapons.length; ++j) {
+                        if (weapons[j] instanceof Pistol) {
+                            Pistol p = (Pistol) weapons[j];
+                            p.setRounds(p.getRounds() + e.getQuantity());
                         }
                     }
                 }
 
                 if (e instanceof ShotgunAmmo) {
-                    for (int j = 0; j < rangedWeapons.length; ++j) {
-                        if (rangedWeapons[j] instanceof Shotgun) {
-                            rangedWeapons[j].setRounds(rangedWeapons[j].getRounds() + e.getQuantity());
+                    for (int j = 0; j < weapons.length; ++j) {
+                        if (weapons[j] instanceof Shotgun) {
+                            Shotgun s = (Shotgun) weapons[j];
+                            s.setRounds(s.getRounds() + e.getQuantity());
                         }
                     }
                 }
 
                 if (e instanceof RifleAmmo) {
-                    for (int j = 0; j < rangedWeapons.length; ++j) {
-                        if (rangedWeapons[j] instanceof Rifle) {
-                            rangedWeapons[j].setRounds(rangedWeapons[j].getRounds() + e.getQuantity());
+                    for (int j = 0; j < weapons.length; ++j) {
+                        if (weapons[j] instanceof Rifle) {
+                            Rifle r = (Rifle) weapons[j];
+                            r.setRounds(r.getRounds() + e.getQuantity());
                         }
                     }
                 }
@@ -302,35 +314,39 @@ public class GameScreen implements Screen, InputProcessor {
     }
 
     public void playerFire(Vector3 position) {
-        if (System.currentTimeMillis() - leftmousedowntime > rangedWeapon.getCooldown()) {
-            leftmousedowntime = System.currentTimeMillis();
+        if (equippedWeapon instanceof RangedWeapon) {
+            RangedWeapon w = (RangedWeapon) equippedWeapon;
 
-            if (rangedWeapon.isSemi()) {
-                if (leftmouseup) {
-                    canFire = true;
-                    leftmouseup = false;
+            if (System.currentTimeMillis() - leftmousedowntime > w.getCooldown()) {
+                leftmousedowntime = System.currentTimeMillis();
+
+                if (w.isSemi()) {
+                    if (leftmouseup) {
+                        canFire = true;
+                        leftmouseup = false;
+                    } else {
+                        canFire = false;
+                    }
                 } else {
-                    canFire = false;
+                    canFire = true;
                 }
-            } else {
-                canFire = true;
             }
-        }
 
-        if (!canFire) {
-            return;
-        }
+            if (!canFire) {
+                return;
+            }
 
-        if (rangedWeapon.getAmmo() == 0) {
-            rangedWeapon.reload();
-            return;
-        }
+            if (w.getAmmo() == 0 && !w.isReloading()) {
+                w.reload();
+                return;
+            }
 
-        canFire = false;
-        float playerx = player.getX() + player.getWidth() / 2, playery = player.getY() + player.getHeight() / 2;
-        float anglex = position.x + 2 - playerx, angley = position.y + 2 - playery;
-        float theta = (float) (Math.atan2(angley, anglex));
-        rangedWeapon.fire(projectiles, theta, playerx, playery, 8);
+            canFire = false;
+            float playerx = player.getX() + player.getWidth() / 2, playery = player.getY() + player.getHeight() / 2;
+            float anglex = position.x + 2 - playerx, angley = position.y + 2 - playery;
+            float theta = (float) (Math.atan2(angley, anglex));
+            w.fire(projectiles, theta, playerx, playery, 8);
+        }
     }
 
     boolean spawning = true;
@@ -353,7 +369,7 @@ public class GameScreen implements Screen, InputProcessor {
     }
 
     public void spawnGroup(float x, float y) {
-        int size = (int) Math.floor(Math.random() * 5 + 5);
+        int size = (int) Math.floor(Math.random() * 10 + 10);
         for (int i = 0; i < size; ++i) {
             Walker w = new Walker(x + (float) (Math.floor(Math.random() * 20 - 10)), y + (float) (Math.floor(Math.random() * 20 - 10)));
             enemies.add(w);
@@ -380,7 +396,8 @@ public class GameScreen implements Screen, InputProcessor {
                     r.setPosition(x, y);
                     items.add(r);
                     break;
-                default: break;
+                default:
+                    break;
             }
         }
     }
@@ -441,7 +458,11 @@ public class GameScreen implements Screen, InputProcessor {
                 down = true;
                 break;
             case Input.Keys.R:
-                rangedWeapon.reload();
+                if (equippedWeapon instanceof RangedWeapon) {
+                    if (!((RangedWeapon) equippedWeapon).isReloading()) {
+                        ((RangedWeapon) equippedWeapon).reload();
+                    }
+                }
                 break;
             case Input.Keys.SHIFT_LEFT:
                 sprint = true;
@@ -531,7 +552,13 @@ public class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
-        cam.zoom += amountY / 10;
+        if (amountY > 0) {
+            nextWeapon = currentWeapon + 1;
+            nextWeapon = nextWeapon >= availableWeapons ? nextWeapon - availableWeapons : nextWeapon;
+        } else if (amountY < 0) {
+            nextWeapon = currentWeapon - 1;
+            nextWeapon = nextWeapon < 0 ? nextWeapon + availableWeapons : nextWeapon;
+        }
         return false;
     }
 }

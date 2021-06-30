@@ -11,9 +11,8 @@ import java.util.ArrayList;
 
 public abstract class RangedWeapon extends Weapon {
 
-    protected String name = "";
     protected long cooldown = 1000, lifetime = 1000;
-    protected float damage = 1.0f, vel = 3.0f, reloadtime = 1.0f;
+    protected float vel = 3.0f, reloadtime = 1.0f;
     protected int ammo = 10, magazine = 10, rounds = 0;
     boolean reloading = false, semi = false;
 

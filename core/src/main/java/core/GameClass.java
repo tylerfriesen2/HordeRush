@@ -16,7 +16,7 @@ import java.util.HashMap;
 public class GameClass extends Game {
 	private static AssetManager assetManager;
 	private static HashMap<String, String> assets;
-	private SpriteBatch batches[];
+	private SpriteBatch[] batches;
 	private FitViewport viewport;
 	private static ActionHandler actionHandler;
 	private static FreeTypeFontGenerator fontGenerator;

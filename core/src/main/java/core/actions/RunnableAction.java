@@ -2,7 +2,7 @@ package core.actions;
 
 public class RunnableAction extends Action {
 
-    private Runnable runnable;
+    private final Runnable runnable;
 
     public RunnableAction (Runnable runnable) {
         this.runnable = runnable;

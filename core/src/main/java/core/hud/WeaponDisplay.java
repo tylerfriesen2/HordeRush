@@ -6,12 +6,15 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import core.GameClass;
 import core.weapons.RangedWeapon;
+import core.weapons.Weapon;
 
 public class WeaponDisplay {
 
     private float x = 0, y = 0;
     private int ammo = 0, rounds = 0;
-    private BitmapFont nameFont, ammoFont, reloadingFont;
+    private final BitmapFont nameFont;
+    private final BitmapFont ammoFont;
+    private final BitmapFont reloadingFont;
     private String name = "", ammoString = "";
     private boolean reloading = false;
 
@@ -31,12 +34,15 @@ public class WeaponDisplay {
         reloadingFont = GameClass.getFontGenerator().generateFont(parameter);
     }
 
-    public void update(RangedWeapon weapon) {
-        name = weapon.getName();
-        ammo = weapon.getAmmo();
-        rounds = weapon.getRounds();
-        ammoString = String.format("%d / %d", ammo, rounds);
-        reloading = weapon.isReloading();
+    public void update(Weapon weapon) {
+        if (weapon instanceof RangedWeapon) {
+            RangedWeapon w = (RangedWeapon) weapon;
+            name = w.getName();
+            ammo = w.getAmmo();
+            rounds = w.getRounds();
+            ammoString = String.format("%d / %d", ammo, rounds);
+            reloading = w.isReloading();
+        }
     }
 
     public void draw(SpriteBatch batch) {

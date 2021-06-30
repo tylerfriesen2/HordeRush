@@ -32,7 +32,7 @@ public class GameScreen implements Screen, InputProcessor {
 
     // Player variables
     Player player;
-    boolean left = false, right = false, up = false, down = false, leftmousedown = false, leftmouseup = false, rightmousedown = false, sprint = false;
+    boolean left = false, right = false, up = false, down = false, leftmousedown = false, leftmouseup = true, rightmousedown = false, sprint = false;
     float xvel = 0, yvel = 0, maxxvel = 1, maxyvel = 1, accel = 0.2f, decel = 1.2f;
     Vector3 mousePosition = new Vector3();
 
@@ -169,7 +169,7 @@ public class GameScreen implements Screen, InputProcessor {
     public void update(float delta) {
         // Do actions
         if (core.getActionHandler().run()) {
-
+            // Do things while the action queue is running
         }
 
         // Update HUD
@@ -183,9 +183,11 @@ public class GameScreen implements Screen, InputProcessor {
         cam.update();
 
         // Change weapons
-        if (currentWeapon != nextWeapon) {
-            currentWeapon = nextWeapon;
-            rangedWeapon = rangedWeapons[currentWeapon];
+        if (!rangedWeapon.isReloading()) {
+            if (currentWeapon != nextWeapon) {
+                currentWeapon = nextWeapon;
+                rangedWeapon = rangedWeapons[currentWeapon];
+            }
         }
 
         // Update projectiles
@@ -306,6 +308,9 @@ public class GameScreen implements Screen, InputProcessor {
             if (rangedWeapon.isSemi()) {
                 if (leftmouseup) {
                     canFire = true;
+                    leftmouseup = false;
+                } else {
+                    canFire = false;
                 }
             } else {
                 canFire = true;
@@ -492,7 +497,6 @@ public class GameScreen implements Screen, InputProcessor {
         switch (button) {
             case Input.Buttons.LEFT:
                 leftmousedown = true;
-                leftmouseup = false;
                 break;
             default:
                 break;
@@ -504,7 +508,9 @@ public class GameScreen implements Screen, InputProcessor {
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         switch (button) {
             case Input.Buttons.LEFT:
-                if (leftmousedown) { leftmouseup = true; }
+                if (leftmousedown) {
+                    leftmouseup = true;
+                }
                 leftmousedown = false;
                 break;
             default:

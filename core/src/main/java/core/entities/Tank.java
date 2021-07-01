@@ -8,20 +8,20 @@ import com.badlogic.gdx.math.Rectangle;
 import core.GameClass;
 import core.utils.Point;
 
-public class Walker extends Enemy {
+public class Tank extends Enemy {
 
     private static final int FRAME_COLS = 2, FRAME_ROWS = 1;
 
-    float dragvel = 0.1f;
+    float vel = 0.5f;
 
     Animation<TextureRegion> animation;
     Texture downTexture;
 
-    public Walker(float x, float y) {
+    public Tank(float x, float y) {
         super();
 
-        setVel(0.65f);
-        setMaxhealth(2.0f);
+        setVel(0.5f);
+        setMaxhealth(10.0f);
         setHealth(getMaxhealth());
         if (GameClass.getAssetManager().isLoaded(GameClass.getAssets().get("zombie"), Texture.class)) {
             downTexture = GameClass.getAssetManager().get(GameClass.getAssets().get("zombie"), Texture.class);
@@ -38,8 +38,9 @@ public class Walker extends Enemy {
             }
         }
 
-        animation = new Animation<>(0.5f, downFrames);
+        animation = new Animation<>(0.65f, downFrames);
         sprite = new Sprite(animation.getKeyFrame(getStateTime()));
+        sprite.setScale(1.5f);
 
         setPosition(x, y);
     }
@@ -50,17 +51,17 @@ public class Walker extends Enemy {
         // Update animation
         sprite.setRegion(animation.getKeyFrame(getStateTime(), true));
 
-        // Update dragging speed
-        if (dragvel >= getVel()) {
-            dragvel = 0.075f;
+        // Update running speed
+        if (vel < getVel()) {
+            vel *= 1.005f;
         } else {
-            dragvel *= 1.02f;
+            vel = getVel();
         }
 
         // Move towards player
         float distance = Point.distance(new Point(getX() + getWidth() / 2, getY() + getHeight() / 2), new Point(playerx + 16, playery + 16));
         if (distance >= 16) {
-            sprite.translate(dragvel * (float) Math.cos(getTheta()), dragvel * (float) Math.sin(getTheta()));
+            sprite.translate(vel * (float) Math.cos(getTheta()), vel * (float) Math.sin(getTheta()));
         }
     }
 

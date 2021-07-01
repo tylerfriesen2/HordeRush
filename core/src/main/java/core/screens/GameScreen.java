@@ -9,9 +9,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
 import core.GameClass;
-import core.entities.Enemy;
-import core.entities.Player;
-import core.entities.Walker;
+import core.actions.DelayAction;
+import core.actions.RunnableAction;
+import core.entities.*;
 import core.hud.WeaponDisplay;
 import core.items.Item;
 import core.items.PistolAmmo;
@@ -358,21 +358,42 @@ public class GameScreen implements Screen, InputProcessor {
     public void spawnEnemies() {
         if (spawning) {
             if (System.currentTimeMillis() - lastSpawn > 5000) {
-                float spawnx = player.getX() + (float) (Math.floor(Math.random() * 300 - 150)), spawny = player.getY() + (float) (Math.floor(Math.random() * 300 - 150));
-                if (Point.distance(new Point(spawnx, spawny), new Point(player.getX(), player.getY())) < 100) {
+                float spawnx = player.getX() + (float) (Math.floor(Math.random() * 700 - 350)), spawny = player.getY() + (float) (Math.floor(Math.random() * 520 - 260));
+                if (Point.distance(new Point(spawnx, spawny), new Point(player.getX(), player.getY())) < 330) {
                     return;
                 }
                 lastSpawn = System.currentTimeMillis();
-                spawnGroup(spawnx, spawny);
+                int spawnType = (int) Math.floor(Math.random() * 4);
+                switch (spawnType) {
+                    case 0:
+                        Tank t = new Tank(spawnx, spawny);
+                        enemies.add(t);
+                        break;
+                    case 1:
+                        Runner r = new Runner(spawnx, spawny);
+                        enemies.add(r);
+                        break;
+                    case 2:
+                    default:
+                        spawnHorde(spawnx, spawny);
+                        break;
+
+                }
             }
         }
     }
 
-    public void spawnGroup(float x, float y) {
-        int size = (int) Math.floor(Math.random() * 10 + 10);
+    public void spawnHorde(float x, float y) {
+        int size = (int) Math.floor(Math.random() * 25 + 5);
         for (int i = 0; i < size; ++i) {
-            Walker w = new Walker(x + (float) (Math.floor(Math.random() * 20 - 10)), y + (float) (Math.floor(Math.random() * 20 - 10)));
-            enemies.add(w);
+            GameClass.getActionHandler().addAction(new RunnableAction(new Runnable() {
+                @Override
+                public void run() {
+                    Walker w = new Walker(x + (float) (Math.floor(Math.random() * 20 - 10)), y + (float) (Math.floor(Math.random() * 20 - 10)));
+                    enemies.add(w);
+                }
+            }));
+            GameClass.getActionHandler().addAction(new DelayAction(0.1f));
         }
     }
 

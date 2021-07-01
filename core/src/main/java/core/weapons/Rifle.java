@@ -10,11 +10,12 @@ public class Rifle extends RangedWeapon {
     public Rifle() {
         setName("Rifle");
         setCooldown(100);
-        setDamage(0.6f);
+        setDamage(1.0f);
         setLifetime(3000);
         setVel(7.5f);
         setAmmo(32);
         setMagazine(32);
+        setRounds(64);
         setReloadtime(1.0f);
         setSemi(false);
     }

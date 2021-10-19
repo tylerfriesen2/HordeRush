@@ -51,8 +51,18 @@ public class GameClass extends Game {
 	private void loadAssets() {
 		assets.put("player", "player/player.png");
 		assetManager.load(assets.get("player"), Texture.class);
+		assets.put("up", "player/up.png");
+		assetManager.load(assets.get("up"), Texture.class);
+		assets.put("down", "player/down.png");
+		assetManager.load(assets.get("down"), Texture.class);
+		assets.put("left", "player/left.png");
+		assetManager.load(assets.get("left"), Texture.class);
+		assets.put("right", "player/right.png");
+		assetManager.load(assets.get("right"), Texture.class);
 		assets.put("bullet", "objects/bullet.png");
 		assetManager.load(assets.get("bullet"), Texture.class);
+		assets.put("arrow", "objects/arrow.png");
+		assetManager.load(assets.get("arrow"), Texture.class);
 		assets.put("zombie", "enemies/zombie-down.png");
 		assetManager.load(assets.get("zombie"), Texture.class);
 		assets.put("healthbar", "objects/healthbar.png");
@@ -63,6 +73,12 @@ public class GameClass extends Game {
 		assetManager.load(assets.get("rifleammo"), Texture.class);
 		assets.put("shotgunammo", "objects/shotgunammo.png");
 		assetManager.load(assets.get("shotgunammo"), Texture.class);
+		assets.put("pistolcursor", "interface/pistolcursor.png");
+		assetManager.load(assets.get("pistolcursor"), Texture.class);
+		assets.put("healthpack", "objects/healthpack.png");
+		assetManager.load(assets.get("healthpack"), Texture.class);
+
+		assetManager.finishLoading();
 
 		// Generate fonts
 		fontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Reckoner.ttf"));

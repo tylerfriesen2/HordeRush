@@ -1,4 +1,4 @@
-package core.entities;
+package core.entities.enemies;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -8,21 +8,22 @@ import com.badlogic.gdx.math.Rectangle;
 import core.GameClass;
 import core.utils.Point;
 
-public class Runner extends Enemy {
+public class Tank extends Enemy {
 
     private static final int FRAME_COLS = 2, FRAME_ROWS = 1;
 
-    float vel = 0.5f;
+    float vel = 0.25f;
 
     Animation<TextureRegion> animation;
     Texture downTexture;
 
-    public Runner(float x, float y) {
+    public Tank(float x, float y) {
         super();
 
-        setVel(1.25f);
-        setMaxhealth(3.0f);
+        setVel(0.25f);
+        setMaxhealth(10.0f);
         setHealth(getMaxhealth());
+        setDamage(3.0f);
         if (GameClass.getAssetManager().isLoaded(GameClass.getAssets().get("zombie"), Texture.class)) {
             downTexture = GameClass.getAssetManager().get(GameClass.getAssets().get("zombie"), Texture.class);
         } else {
@@ -38,8 +39,9 @@ public class Runner extends Enemy {
             }
         }
 
-        animation = new Animation<>(0.35f, downFrames);
+        animation = new Animation<>(0.65f, downFrames);
         sprite = new Sprite(animation.getKeyFrame(getStateTime()));
+        sprite.setScale(1.5f);
 
         setPosition(x, y);
     }
@@ -52,20 +54,23 @@ public class Runner extends Enemy {
 
         // Update running speed
         if (vel < getVel()) {
-            vel *= 1.01f;
+            vel *= 1.005f;
         } else {
             vel = getVel();
         }
 
         // Move towards player
         float distance = Point.distance(new Point(getX() + getWidth() / 2, getY() + getHeight() / 2), new Point(playerx + 16, playery + 16));
-        if (distance >= 16) {
+        if (distance >= 14) {
             sprite.translate(vel * (float) Math.cos(getTheta()), vel * (float) Math.sin(getTheta()));
         }
     }
 
     @Override
     public Rectangle getBoundingRectangle() {
-        return new Rectangle(getX() + 4, getY() + 4, getWidth() - 8, getHeight() - 8);
+        Rectangle rectangle = sprite.getBoundingRectangle();
+        rectangle.setSize(rectangle.getWidth() - 8, rectangle.getHeight() - 8);
+        rectangle.setPosition(rectangle.getX() + 4, rectangle.getY() + 4);
+        return rectangle;
     }
 }

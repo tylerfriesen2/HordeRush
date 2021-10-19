@@ -1,6 +1,7 @@
 package core.utils;
 
 import core.entities.Entity;
+import core.entities.Player;
 
 public class Collisions {
 

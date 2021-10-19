@@ -1,4 +1,4 @@
-package core.entities;
+package core.entities.enemies;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -8,7 +8,7 @@ import com.badlogic.gdx.math.Rectangle;
 import core.GameClass;
 import core.utils.Point;
 
-public class Tank extends Enemy {
+public class Runner extends Enemy {
 
     private static final int FRAME_COLS = 2, FRAME_ROWS = 1;
 
@@ -17,12 +17,13 @@ public class Tank extends Enemy {
     Animation<TextureRegion> animation;
     Texture downTexture;
 
-    public Tank(float x, float y) {
+    public Runner(float x, float y) {
         super();
 
-        setVel(0.5f);
-        setMaxhealth(10.0f);
+        setVel(1.25f);
+        setMaxhealth(3.0f);
         setHealth(getMaxhealth());
+        setDamage(0.5f);
         if (GameClass.getAssetManager().isLoaded(GameClass.getAssets().get("zombie"), Texture.class)) {
             downTexture = GameClass.getAssetManager().get(GameClass.getAssets().get("zombie"), Texture.class);
         } else {
@@ -38,9 +39,8 @@ public class Tank extends Enemy {
             }
         }
 
-        animation = new Animation<>(0.65f, downFrames);
+        animation = new Animation<>(0.35f, downFrames);
         sprite = new Sprite(animation.getKeyFrame(getStateTime()));
-        sprite.setScale(1.5f);
 
         setPosition(x, y);
     }
@@ -53,14 +53,14 @@ public class Tank extends Enemy {
 
         // Update running speed
         if (vel < getVel()) {
-            vel *= 1.005f;
+            vel *= 1.01f;
         } else {
             vel = getVel();
         }
 
         // Move towards player
         float distance = Point.distance(new Point(getX() + getWidth() / 2, getY() + getHeight() / 2), new Point(playerx + 16, playery + 16));
-        if (distance >= 16) {
+        if (distance >= 14) {
             sprite.translate(vel * (float) Math.cos(getTheta()), vel * (float) Math.sin(getTheta()));
         }
     }

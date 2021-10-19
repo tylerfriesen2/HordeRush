@@ -13,7 +13,7 @@ public class Bullet extends Projectile {
         this.theta = theta;
         this.lifetime = lifetime;
         setDamage(damage);
-        sprite.setPosition(x - sprite.getWidth() / 2, y - sprite.getHeight() / 2);
+        sprite.setPosition(x, y);
     }
 
     public void loadTexture() {

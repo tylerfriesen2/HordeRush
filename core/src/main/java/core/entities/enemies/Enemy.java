@@ -1,4 +1,4 @@
-package core.entities;
+package core.entities.enemies;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -7,10 +7,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Timer;
 import core.GameClass;
+import core.entities.Entity;
 
 public class Enemy extends Entity {
 
-    protected float health = 1, maxhealth = 1, stateTime = 0, theta = 0, vel = 0.75f;
+    protected float health = 1, maxhealth = 1, stateTime = 0, theta = 0, vel = 0.75f, damage = 1.0f;
     protected boolean alive = true, dangerous = true, disposable = false;
     protected Sprite healthbar;
 
@@ -68,6 +69,14 @@ public class Enemy extends Entity {
 
     public void setMaxhealth(float maxhealth) {
         this.maxhealth = maxhealth;
+    }
+
+    public float getDamage() {
+        return damage;
+    }
+
+    public void setDamage(float damage) {
+        this.damage = damage;
     }
 
     public void damage(float amount) {

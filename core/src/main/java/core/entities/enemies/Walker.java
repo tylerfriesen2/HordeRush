@@ -1,4 +1,4 @@
-package core.entities;
+package core.entities.enemies;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -59,7 +59,7 @@ public class Walker extends Enemy {
 
         // Move towards player
         float distance = Point.distance(new Point(getX() + getWidth() / 2, getY() + getHeight() / 2), new Point(playerx + 16, playery + 16));
-        if (distance >= 16) {
+        if (distance >= 14) {
             sprite.translate(dragvel * (float) Math.cos(getTheta()), dragvel * (float) Math.sin(getTheta()));
         }
     }

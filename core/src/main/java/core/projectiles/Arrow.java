@@ -8,11 +8,13 @@ public class Arrow extends Projectile {
 
     public Arrow(float theta, float x, float y, float vel, long lifetime, float damage) {
         super();
-        loadTexture();
         this.vel = vel;
         this.theta = theta;
         this.lifetime = lifetime;
         setDamage(damage);
+
+        loadTexture();
+        sprite.setOrigin(0 ,2);
         sprite.setPosition(x, y);
         sprite.setRotation((float) Math.toDegrees(theta));
     }

@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
-public class Entity {
+public abstract class Entity {
     protected Sprite sprite;
 
     public void draw(SpriteBatch batch) {
@@ -19,9 +19,9 @@ public class Entity {
         this.sprite = sprite;
     }
 
-    public Rectangle getBoundingRectangle() {
-        return sprite.getBoundingRectangle();
-    }
+    public abstract Rectangle getCollisionRectangle();
+
+    public abstract Rectangle getDamageRectangle();
 
     public float getWidth() {
         return sprite.getWidth();

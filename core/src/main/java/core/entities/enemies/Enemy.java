@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Timer;
 import core.GameClass;
 import core.entities.Entity;
@@ -12,7 +13,7 @@ import core.entities.Entity;
 public class Enemy extends Entity {
 
     protected float health = 1, maxhealth = 1, stateTime = 0, theta = 0, vel = 0.75f, damage = 1.0f;
-    protected boolean alive = true, dangerous = true, disposable = false;
+    protected boolean alive = true, dangerous = true, disposable = false, damaged = false;
     protected Sprite healthbar;
 
     public Enemy() {
@@ -51,6 +52,16 @@ public class Enemy extends Entity {
         }
     }
 
+    @Override
+    public Rectangle getCollisionRectangle() {
+        return sprite.getBoundingRectangle();
+    }
+
+    @Override
+    public Rectangle getDamageRectangle() {
+        return sprite.getBoundingRectangle();
+    }
+
     public void die() {
         setDisposable(true);
     }
@@ -81,6 +92,7 @@ public class Enemy extends Entity {
 
     public void damage(float amount) {
         health -= amount;
+        damaged = true;
         sprite.setColor(new Color(1.0f, 0.5f, 0.5f, 1.0f));
         Timer.schedule(new Timer.Task() {
             @Override

@@ -23,6 +23,7 @@ public class Walker extends Enemy {
         setVel(0.65f);
         setMaxhealth(2.0f);
         setHealth(getMaxhealth());
+        setDamage(2.0f);
         if (GameClass.getAssetManager().isLoaded(GameClass.getAssets().get("zombie"), Texture.class)) {
             downTexture = GameClass.getAssetManager().get(GameClass.getAssets().get("zombie"), Texture.class);
         } else {
@@ -47,25 +48,32 @@ public class Walker extends Enemy {
     public void update(float delta, float playerx, float playery) {
         super.update(delta, playerx, playery);
 
-        // Update animation
-        sprite.setRegion(animation.getKeyFrame(getStateTime(), true));
+        // Get distance to player
+        float dist = Point.distance(new Point(sprite.getX(), sprite.getY()), new Point(playerx, playery));
 
-        // Update dragging speed
-        if (dragvel >= getVel()) {
-            dragvel = 0.075f;
-        } else {
-            dragvel *= 1.02f;
-        }
+        // Check if this enemy should be aggro
+        if (dist < 200 || damaged) {
+            // Update animation
+            sprite.setRegion(animation.getKeyFrame(getStateTime(), true));
 
-        // Move towards player
-        float distance = Point.distance(new Point(getX() + getWidth() / 2, getY() + getHeight() / 2), new Point(playerx + 16, playery + 16));
-        if (distance >= 14) {
+            // Update dragging speed
+            if (dragvel >= getVel()) {
+                dragvel = 0.075f;
+            } else {
+                dragvel *= 1.02f;
+            }
+
+            // Attack player
             sprite.translate(dragvel * (float) Math.cos(getTheta()), dragvel * (float) Math.sin(getTheta()));
         }
     }
 
+    public Rectangle getCollisionRectangle() {
+        return getSprite().getBoundingRectangle();
+    }
+
     @Override
-    public Rectangle getBoundingRectangle() {
-        return new Rectangle(getX() + 4, getY() + 4, getWidth() - 8, getHeight() - 8);
+    public Rectangle getDamageRectangle() {
+        return new Rectangle(getX() + 2 * getSprite().getScaleX(), getY() + 2 * getSprite().getScaleY(), getWidth() * getSprite().getScaleX() - 4 * getSprite().getScaleX(), getHeight() * getSprite().getScaleY() - 4 * getSprite().getScaleY());
     }
 }

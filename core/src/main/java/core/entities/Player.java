@@ -13,7 +13,7 @@ import core.ref.Ref;
 public class Player extends Entity {
 
     private float health = 20.0f, maxHealth = 20.0f;
-    private Rectangle damageRectangle;
+    private final Rectangle damageRectangle;
 
     Texture[] textures;
 
@@ -89,8 +89,17 @@ public class Player extends Entity {
     }
 
     @Override
-    public void draw(SpriteBatch batch) {
-        super.draw(batch);
+    public Rectangle getCollisionRectangle() {
+        return sprite.getBoundingRectangle();
+    }
+
+    @Override
+    public Rectangle getDamageRectangle() {
+        Rectangle rectangle = sprite.getBoundingRectangle();
+        rectangle.setWidth(rectangle.getWidth() - 4);
+        rectangle.setHeight(rectangle.getHeight() - 4);
+        rectangle.setPosition(rectangle.getX() + 2, rectangle.getY() + 2);
+        return rectangle;
     }
 
 }

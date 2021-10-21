@@ -8,12 +8,14 @@ public class Bullet extends Projectile {
 
     public Bullet(float theta, float x, float y, float vel, long lifetime, float damage) {
         super();
-        loadTexture();
         this.vel = vel;
         this.theta = theta;
         this.lifetime = lifetime;
         setDamage(damage);
-        sprite.setPosition(x, y);
+
+        loadTexture();
+        sprite.setOriginCenter();
+        sprite.setPosition(x - 4, y - 4);
     }
 
     public void loadTexture() {

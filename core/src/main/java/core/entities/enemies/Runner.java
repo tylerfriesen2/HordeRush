@@ -23,7 +23,7 @@ public class Runner extends Enemy {
         setVel(1.25f);
         setMaxhealth(3.0f);
         setHealth(getMaxhealth());
-        setDamage(0.5f);
+        setDamage(1.0f);
         if (GameClass.getAssetManager().isLoaded(GameClass.getAssets().get("zombie"), Texture.class)) {
             downTexture = GameClass.getAssetManager().get(GameClass.getAssets().get("zombie"), Texture.class);
         } else {
@@ -48,25 +48,23 @@ public class Runner extends Enemy {
     public void update(float delta, float playerx, float playery) {
         super.update(delta, playerx, playery);
 
-        // Update animation
-        sprite.setRegion(animation.getKeyFrame(getStateTime(), true));
+        // Get distance to player
+        float dist = Point.distance(new Point(sprite.getX(), sprite.getY()), new Point(playerx, playery));
 
-        // Update running speed
-        if (vel < getVel()) {
-            vel *= 1.01f;
-        } else {
-            vel = getVel();
-        }
+        // Check if this enemy should be aggro
+        if (dist < 200 || damaged) {
+            // Update animation
+            sprite.setRegion(animation.getKeyFrame(getStateTime(), true));
 
-        // Move towards player
-        float distance = Point.distance(new Point(getX() + getWidth() / 2, getY() + getHeight() / 2), new Point(playerx + 16, playery + 16));
-        if (distance >= 14) {
+            // Update running speed
+            if (vel < getVel()) {
+                vel *= 1.01f;
+            } else {
+                vel = getVel();
+            }
+
+            // Attack player
             sprite.translate(vel * (float) Math.cos(getTheta()), vel * (float) Math.sin(getTheta()));
         }
-    }
-
-    @Override
-    public Rectangle getBoundingRectangle() {
-        return new Rectangle(getX() + 4, getY() + 4, getWidth() - 8, getHeight() - 8);
     }
 }

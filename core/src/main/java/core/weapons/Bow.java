@@ -17,7 +17,7 @@ public class Bow extends RangedWeapon {
         setAmmo(1);
         setMagazine(1);
         setRounds(50);
-        setReloadtime(1.5f);
+        setReloadtime(1.0f);
         setSemi(true);
     }
 

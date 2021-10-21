@@ -12,7 +12,7 @@ import core.entities.Player;
 public class HealthBar {
 
     private float x = 0, y = 0;
-    private Sprite healthbar;
+    private final Sprite healthbar;
     private final BitmapFont healthFont;
     private String healthString = "";
 

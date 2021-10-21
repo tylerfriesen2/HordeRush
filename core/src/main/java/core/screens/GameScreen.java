@@ -95,7 +95,7 @@ public class GameScreen implements Screen, InputProcessor {
             }
         }
 
-        weaponDisplay = new WeaponDisplay(Gdx.graphics.getWidth() - 4, 44);
+        weaponDisplay = new WeaponDisplay(Gdx.graphics.getWidth() - 4, 46);
         healthBar = new HealthBar(Gdx.graphics.getWidth() - 4, 8);
         Gdx.input.setCursorCatched(cursorCatched);
     }
@@ -221,7 +221,7 @@ public class GameScreen implements Screen, InputProcessor {
         player.update(playerDirection, xvel, yvel);
 
         // Update camera
-        cam.position.set(player.getX() + player.getWidth() / 2, player.getY() + player.getHeight() / 2, 0);
+        cam.position.set(playerPosition.x, playerPosition.y, 0);
         cam.update();
 
         // Change weapons
@@ -260,24 +260,25 @@ public class GameScreen implements Screen, InputProcessor {
         for (int i = enemies.size() - 1; i >= 0; --i) {
             for (int j = enemies.size() - 1; j >= 0; --j) {
                 Enemy e1 = enemies.get(i), e2 = enemies.get(j);
-                if (Intersector.overlaps(e1.getBoundingRectangle(), e2.getBoundingRectangle()) && e1 != e2) {
+                if (Intersector.overlaps(e1.getCollisionRectangle(), e2.getCollisionRectangle()) && e1 != e2) {
                     Collisions.twoWaySeparation(e1, e2);
                 }
             }
         }
 
         // Detect collisions between enemies and projectiles
-        for (int i = projectiles.size() - 1; i >= 0; --i) {
-            Projectile p = projectiles.get(i);
-            for (int j = enemies.size() - 1; j >= 0; --j) {
-                Enemy e = enemies.get(j);
-                if (Intersector.overlaps(p.getBoundingRectangle(), e.getBoundingRectangle())) {
-                    float health = e.getHealth();
-                    e.damage(p.getDamage());
-                    if (e.getHealth() >= 0) {
-                        projectiles.remove(p);
-                    } else {
-                        p.setDamage(p.getDamage() - health);
+        for (int j = enemies.size() - 1; j >= 0; --j) {
+            Enemy e = enemies.get(j);
+            for (int i = projectiles.size() - 1; i >= 0; --i) {
+                Projectile p = projectiles.get(i);
+                if (Intersector.overlaps(p.getBoundingRectangle(), e.getCollisionRectangle())) {
+                    if (e.getHealth() > 0) {
+                        if (e.getHealth() >= p.getDamage()) {
+                            projectiles.remove(p);
+                        }
+
+                        e.damage(p.getDamage());
+                        p.setDamage(e.getHealth() + p.getDamage());
                     }
                 }
             }
@@ -286,20 +287,16 @@ public class GameScreen implements Screen, InputProcessor {
         // Detect collisions between enemies and the player
         for (int i = enemies.size() - 1; i >= 0; --i) {
             Enemy e = enemies.get(i);
-            if (Intersector.overlaps(e.getBoundingRectangle(), player.getBoundingRectangle())) {
+            if (Intersector.overlaps(e.getCollisionRectangle(), player.getCollisionRectangle())) {
                 Collisions.oneWaySeparation(player, e);
                 if (System.currentTimeMillis() - lastDamage >= 1000) {
                     lastDamage = System.currentTimeMillis();
 
-                    GameClass.getActionHandler().addAction(new RunnableAction(() -> {
-                        player.damage(e.getDamage());
-                    }));
+                    GameClass.getActionHandler().addAction(new RunnableAction(() -> player.damage(e.getDamage())));
 
                     GameClass.getActionHandler().addAction(new DelayAction(0.5f));
 
-                    GameClass.getActionHandler().addAction(new RunnableAction(() -> {
-                        player.getSprite().setColor(Color.WHITE);
-                    }));
+                    GameClass.getActionHandler().addAction(new RunnableAction(() -> player.getSprite().setColor(Color.WHITE)));
                 }
             }
         }
@@ -307,7 +304,7 @@ public class GameScreen implements Screen, InputProcessor {
         // Detect collisions between items and the player
         for (int i = items.size() - 1; i >= 0; --i) {
             Item e = items.get(i);
-            if (Intersector.overlaps(e.getBoundingRectangle(), player.getBoundingRectangle())) {
+            if (Intersector.overlaps(e.getBoundingRectangle(), player.getCollisionRectangle())) {
                 if (e instanceof PistolAmmo) {
                     for (Weapon weapon : weapons) {
                         if (weapon instanceof Pistol) {
@@ -354,10 +351,10 @@ public class GameScreen implements Screen, InputProcessor {
         for (Item i : items) {
             i.draw(core.getBatch(CAMERA_BATCH));
         }
+        player.draw(core.getBatch(CAMERA_BATCH));
         for (Projectile p : projectiles) {
             p.draw(core.getBatch(CAMERA_BATCH));
         }
-        player.draw(core.getBatch(CAMERA_BATCH));
         for (Enemy e : enemies) {
             e.draw(core.getBatch(CAMERA_BATCH));
         }
@@ -373,10 +370,10 @@ public class GameScreen implements Screen, InputProcessor {
             }
 
             if (renderHitBoxes) {
-                shapeRenderer.rect(player.getBoundingRectangle().getX(), player.getBoundingRectangle().getY(), player.getBoundingRectangle().getWidth(), player.getBoundingRectangle().getHeight());
+                shapeRenderer.rect(player.getDamageRectangle().getX(), player.getDamageRectangle().getY(), player.getDamageRectangle().getWidth(), player.getDamageRectangle().getHeight());
 
                 for (Enemy e : enemies) {
-                    shapeRenderer.rect(e.getBoundingRectangle().getX(), e.getBoundingRectangle().getY(), e.getBoundingRectangle().getWidth(), e.getBoundingRectangle().getHeight());
+                    shapeRenderer.rect(e.getCollisionRectangle().getX(), e.getCollisionRectangle().getY(), e.getCollisionRectangle().getWidth(), e.getCollisionRectangle().getHeight());
                 }
 
                 for (Projectile p : projectiles) {
@@ -386,7 +383,7 @@ public class GameScreen implements Screen, InputProcessor {
             shapeRenderer.end();
         }
 
-        // Draw hud stuff
+        // Draw HUD stuff
         core.getBatch(HUD_BATCH).begin();
         healthBar.draw(core.getBatch(HUD_BATCH));
         weaponDisplay.draw(core.getBatch(HUD_BATCH));
@@ -428,9 +425,9 @@ public class GameScreen implements Screen, InputProcessor {
             }
 
             canFire = false;
-            float anglex = position.x - 4 - playerPosition.x, angley = position.y - 4 - playerPosition.y;
+            float anglex = position.x - playerPosition.x, angley = position.y - playerPosition.y;
             float theta = (float) Math.atan2(angley, anglex);
-            w.fire(projectiles, theta, playerPosition.x, playerPosition.y, 8);
+            w.fire(projectiles, theta, playerPosition.x, playerPosition.y, player.getRadius() / 2);
         }
     }
 

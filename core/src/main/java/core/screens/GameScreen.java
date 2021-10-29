@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import core.GameClass;
+import core.actions.ActionHandler;
 import core.actions.DelayAction;
 import core.actions.RunnableAction;
 import core.entities.*;
@@ -26,7 +27,6 @@ import core.hud.WeaponDisplay;
 import core.items.*;
 import core.projectiles.Projectile;
 import core.ref.Ref;
-import core.ref.State;
 import core.utils.Collisions;
 import core.utils.Point;
 import core.weapons.*;
@@ -36,7 +36,7 @@ import java.util.ArrayList;
 public class GameScreen implements Screen, InputProcessor {
 
     private final GameClass core;
-    private State state = State.RUNNING;
+    private Ref.State state = Ref.State.RUNNING;
 
     // Camera variables
     private final OrthographicCamera cam;
@@ -44,7 +44,8 @@ public class GameScreen implements Screen, InputProcessor {
 
     // Player variables
     private final Player player;
-    private boolean left = false, right = false, up = false, down = false, leftmousedown = false, leftmouseup = true, rightmousedown = false, sprint = false;
+    private ActionHandler playerActionHandler;
+    private boolean left = false, right = false, up = false, down = false, leftmousedown = false, leftmouseup = true, rightmousedown = false, rightmouseup, sprint = false;
     private float xvel = 0, yvel = 0, maxxvel = 0, maxyvel = 0;
     private final float ACCEL = 5.0f, DECEL = 0.9f, MAX_SPRINT = 80.0f, MAX_WALK = 40.0f;
     private Vector3 mousePosition = new Vector3();
@@ -59,30 +60,38 @@ public class GameScreen implements Screen, InputProcessor {
     private boolean canFire = true, canHit = true;
     private long leftmousedowntime = 0, rightmousedowntime = 0;
 
-    // HUD
-    private Sprite cursor = new Sprite();
+    // HUD variables
+    private final Sprite cursor;
 
     private final HealthBar healthBar;
     private final WeaponDisplay weaponDisplay;
 
+    // World variables
     private final ArrayList<Projectile> projectiles = new ArrayList<>();
     private final ArrayList<Enemy> enemies = new ArrayList<>();
     private final ArrayList<Item> items = new ArrayList<>();
+    private final float aggroRadius = 100.0f;
+    private final ActionHandler worldActionHandler;
 
+    // Debug variables
     private boolean renderHitBoxes = false, renderMouseTrace = false, cursorCatched = true;
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
+    private final int enemyCap = 40;
+
+    // Reference variables
     private final int CAMERA_BATCH = 0, HUD_BATCH = 1;
 
     public GameScreen(GameClass core) {
         this.core = core;
 
         cam = new OrthographicCamera();
-        cam.setToOrtho(false, 640, 480);
+        cam.setToOrtho(false, Ref.WIDTH, Ref.HEIGHT);
         cam.update();
 
         core.getViewport().setCamera(cam);
 
         player = new Player();
+        playerActionHandler = new ActionHandler();
         weapons[0] = new Pistol();
         weapons[1] = new Shotgun();
         weapons[2] = new Rifle();
@@ -104,13 +113,15 @@ public class GameScreen implements Screen, InputProcessor {
         weaponDisplay = new WeaponDisplay(Gdx.graphics.getWidth() - 4, 46);
         healthBar = new HealthBar(Gdx.graphics.getWidth() - 4, 8);
         Gdx.input.setCursorCatched(cursorCatched);
+
+        worldActionHandler = new ActionHandler();
     }
 
     /**
      * Poll inputs and update anything affected by user input
      */
     public void pollInput() {
-        if (state == State.PAUSED) { return; }
+        if (state == Ref.State.PAUSED) { return; }
 
         // Get mouse position
         playerPosition.set(player.getX() + player.getWidth() / 2, player.getY() + player.getHeight() / 2, 0);
@@ -247,13 +258,16 @@ public class GameScreen implements Screen, InputProcessor {
 
         cursor.setPosition(mousePosition.x - cursor.getWidth() / 2, mousePosition.y - cursor.getHeight() / 2);
 
-        if (state == State.PAUSED) { return; }
+        if (state == Ref.State.PAUSED) { return; }
 
         // Do actions in the action queue
-        if (GameClass.getActionHandler().run()) {
+        if (playerActionHandler.run()) {
             // Do things while the action queue is running
         }
 
+        if (worldActionHandler.run()) {
+            // Do things while the action queue is running
+        }
 
         // Move player
         player.update(playerDirection, xvel * delta, yvel * delta);
@@ -346,6 +360,14 @@ public class GameScreen implements Screen, InputProcessor {
 
                         e.damage(p.getDamage());
                         p.setDamage(e.getHealth() + p.getDamage());
+
+                        worldActionHandler.addAction(new DelayAction(1.0f));
+                        worldActionHandler.addAction(new RunnableAction(new Runnable() {
+                            @Override
+                            public void run() {
+                                aggroNearbyEnemies(e, aggroRadius);
+                            }
+                        }));
                     }
                 }
             }
@@ -359,11 +381,11 @@ public class GameScreen implements Screen, InputProcessor {
                 if (System.currentTimeMillis() - lastDamage >= 1000) {
                     lastDamage = System.currentTimeMillis();
 
-                    GameClass.getActionHandler().addAction(new RunnableAction(() -> player.damage(e.getDamage())));
+                    worldActionHandler.addAction(new RunnableAction(() -> player.damage(e.getDamage())));
 
-                    GameClass.getActionHandler().addAction(new DelayAction(0.5f));
+                    worldActionHandler.addAction(new DelayAction(0.5f));
 
-                    GameClass.getActionHandler().addAction(new RunnableAction(() -> player.getSprite().setColor(Color.WHITE)));
+                    worldActionHandler.addAction(new RunnableAction(() -> player.getSprite().setColor(Color.WHITE)));
                 }
             }
         }
@@ -498,7 +520,7 @@ public class GameScreen implements Screen, InputProcessor {
             }
 
             if (w.getAmmo() == 0 && !w.isReloading()) {
-                w.reload();
+                w.reload(playerActionHandler);
                 return;
             }
 
@@ -516,7 +538,7 @@ public class GameScreen implements Screen, InputProcessor {
      * Temporary method to spawn enemies
      */
     public void spawnEnemies() {
-        if (spawning) {
+        if (spawning && enemies.size() < enemyCap) {
             if (System.currentTimeMillis() - lastSpawn > 7500) {
                 float spawnx = player.getX() + (float) (Math.floor(Math.random() * 700 - 350)), spawny = player.getY() + (float) (Math.floor(Math.random() * 520 - 260));
                 if (Point.distance(new Point(spawnx, spawny), new Point(player.getX(), player.getY())) < 330) {
@@ -536,7 +558,7 @@ public class GameScreen implements Screen, InputProcessor {
     public void spawnHorde(float x, float y) {
         int size = (int) Math.floor(Math.random() * 10 + 5);
         for (int i = 0; i < size; ++i) {
-            GameClass.getActionHandler().addAction(new RunnableAction(() -> {
+            worldActionHandler.addAction(new RunnableAction(() -> {
                 float spawnx = x + (float) (Math.floor(Math.random() * 20 - 10)), spawny = y + (float) (Math.floor(Math.random() * 20 - 10));
                 int spawnType = (int) Math.floor(Math.random() * 5);
                 switch (spawnType) {
@@ -555,7 +577,22 @@ public class GameScreen implements Screen, InputProcessor {
                         break;
                 }
             }));
-            GameClass.getActionHandler().addAction(new DelayAction(0.1f));
+            worldActionHandler.addAction(new DelayAction(0.1f));
+        }
+    }
+
+    public void aggroNearbyEnemies(Enemy target, float radius) {
+        Point a = new Point(target.getX(), target.getY());
+        for (Enemy e : enemies) {
+            if (e.equals(target)) {
+                continue;
+            }
+
+            Point b = new Point(e.getX() + e.getWidth() / 2, e.getY() + e.getHeight() / 2);
+
+            if (Point.distance(a, b) <= radius) {
+                e.setAggroB(true);
+            }
         }
     }
 
@@ -611,7 +648,7 @@ public class GameScreen implements Screen, InputProcessor {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        if (state != State.STOPPED) {
+        if (state != Ref.State.STOPPED) {
             pollInput();
             update(delta);
         }
@@ -659,7 +696,7 @@ public class GameScreen implements Screen, InputProcessor {
             case Input.Keys.R:
                 if (equippedWeapon instanceof RangedWeapon) {
                     if (!((RangedWeapon) equippedWeapon).isReloading()) {
-                        ((RangedWeapon) equippedWeapon).reload();
+                        ((RangedWeapon) equippedWeapon).reload(playerActionHandler);
                     }
                 }
                 break;
@@ -680,7 +717,7 @@ public class GameScreen implements Screen, InputProcessor {
                 spawning = !spawning;
                 break;
             case Input.Keys.F5:
-                state = state == State.RUNNING ? State.PAUSED : State.RUNNING;
+                state = state == Ref.State.RUNNING ? Ref.State.PAUSED : Ref.State.RUNNING;
                 break;
             case Input.Keys.NUM_1:
                 nextWeapon = 0;
@@ -738,6 +775,9 @@ public class GameScreen implements Screen, InputProcessor {
             case Input.Buttons.LEFT:
                 leftmousedown = true;
                 break;
+            case Input.Buttons.RIGHT:
+                rightmousedown = true;
+                break;
             default:
                 break;
         }
@@ -752,6 +792,12 @@ public class GameScreen implements Screen, InputProcessor {
                     leftmouseup = true;
                 }
                 leftmousedown = false;
+                break;
+            case Input.Buttons.RIGHT:
+                if (rightmousedown) {
+                    rightmouseup = true;
+                }
+                rightmousedown = false;
                 break;
             default:
                 break;

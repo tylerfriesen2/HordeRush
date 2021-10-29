@@ -3,6 +3,7 @@ package core.weapons;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.utils.Timer;
 import core.GameClass;
+import core.actions.ActionHandler;
 import core.actions.DelayAction;
 import core.actions.RunnableAction;
 import core.projectiles.Projectile;
@@ -16,11 +17,11 @@ public abstract class RangedWeapon extends Weapon {
     protected int ammo = 10, magazine = 10, rounds = 0;
     boolean reloading = false, semi = false;
 
-    public void reload() {
-        if (rounds > 0) {
+    public void reload(ActionHandler actionHandler) {
+        if (rounds > 0 && ammo < magazine) {
             reloading = true;
-            GameClass.getActionHandler().addAction(new DelayAction(reloadtime));
-            GameClass.getActionHandler().addAction(new RunnableAction(new Runnable() {
+            actionHandler.addAction(new DelayAction(reloadtime));
+            actionHandler.addAction(new RunnableAction(new Runnable() {
                 @Override
                 public void run() {
                     int reloadamount = Math.min(magazine - ammo, rounds);

@@ -13,7 +13,7 @@ import core.entities.Entity;
 public class Enemy extends Entity {
 
     protected float health = 1, maxhealth = 1, stateTime = 0, theta = 0, maxvel = 0.75f, damage = 1.0f;
-    protected boolean alive = true, dangerous = true, disposable = false, aggro = false;
+    protected boolean alive = true, disposable = false, aggroA = false, aggroB = false;
     protected Sprite healthbar;
 
     public Enemy() {
@@ -38,7 +38,7 @@ public class Enemy extends Entity {
 
         healthbar.setPosition(sprite.getX(), sprite.getY() + sprite.getHeight() + 4);
 
-        if (health <= 0) { die(); }
+        if (health <= 0.0f) { die(); }
     }
 
     @Override
@@ -92,7 +92,7 @@ public class Enemy extends Entity {
 
     public void damage(float amount) {
         health -= amount;
-        aggro = true;
+        aggroB = true;
         sprite.setColor(new Color(1.0f, 0.5f, 0.5f, 1.0f));
         Timer.schedule(new Timer.Task() {
             @Override
@@ -130,19 +130,27 @@ public class Enemy extends Entity {
         return alive;
     }
 
-    public boolean isDangerous() {
-        return dangerous;
-    }
-
-    public void setDangerous(boolean dangerous) {
-        this.dangerous = dangerous;
-    }
-
     public boolean isDisposable() {
         return disposable;
     }
 
     public void setDisposable(boolean disposable) {
         this.disposable = disposable;
+    }
+
+    public boolean isAggroA() {
+        return aggroA;
+    }
+
+    public void setAggroA(boolean aggroA) {
+        this.aggroA = aggroA;
+    }
+
+    public boolean isAggroB() {
+        return aggroA;
+    }
+
+    public void setAggroB(boolean aggroB) {
+        this.aggroB = aggroB;
     }
 }

@@ -19,8 +19,8 @@ public class DesktopLauncher {
 	private static LwjglApplicationConfiguration getDefaultConfiguration() {
 		LwjglApplicationConfiguration configuration = new LwjglApplicationConfiguration();
 		configuration.title = Ref.title;
-		configuration.width = 640;
-		configuration.height = 480;
+		configuration.width = Ref.WIDTH;
+		configuration.height = Ref.HEIGHT;
 		//// This prevents a confusing error that would appear after exiting normally.
 		configuration.forceExit = false;
 		

@@ -11,7 +11,7 @@ public class Tank extends Enemy {
 
     private static final int FRAME_COLS = 2, FRAME_ROWS = 1;
 
-    float vel = 0.0f, x = (float) (3 * Math.PI / 4);;
+    float vel = 0.0f, x = (float) (3 * Math.PI / 4), k = (float) Math.random() + 0.1f;
 
     Animation<TextureRegion> animation;
     Texture downTexture;
@@ -53,20 +53,23 @@ public class Tank extends Enemy {
 
         // Check if this enemy should be aggro
         if (dist < 200) {
-            aggro = true;
-        } else if (dist >= 640) {
-            aggro = false;
+            aggroA = true;
+        }
+
+        if (dist >= 640) {
+            aggroA = false;
+            aggroB = false;
             x = (float) (3 * Math.PI / 4);
         }
 
-        if (aggro) {
+        if (aggroA || aggroB) {
             // Update animation
             sprite.setRegion(animation.getKeyFrame(getStateTime(), true));
 
             // Update velocity
             x = x > 2.0f * Math.PI ? 0 : x + (float) Math.toRadians(1.0f);
 
-            vel = getMaxVel() * (float) Math.sin(x) + (0.1f + getMaxVel());
+            vel = getMaxVel() * (float) Math.sin(x * k) + (0.1f + getMaxVel());
 
             // Attack player
             sprite.translate(vel * (float) Math.cos(getTheta()) * delta, vel * (float) Math.sin(getTheta()) * delta);

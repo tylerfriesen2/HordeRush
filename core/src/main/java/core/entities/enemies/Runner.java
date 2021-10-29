@@ -11,7 +11,7 @@ public class Runner extends Enemy {
 
     private static final int FRAME_COLS = 2, FRAME_ROWS = 1;
 
-    float vel = 0.0f, x = 0.0f, A = 24.0f;
+    float vel = 0.0f, x = 0.0f, A = 24.0f, k = (float) Math.random() * 4;
 
     Animation<TextureRegion> animation;
     Texture downTexture;
@@ -51,21 +51,24 @@ public class Runner extends Enemy {
         float dist = Point.distance(new Point(sprite.getX(), sprite.getY()), new Point(playerx, playery));
 
         // Check if this enemy should be aggro
-        if (dist < 400) {
-            aggro = true;
-        } else if (dist >= 640) {
-            aggro = false;
+        if (dist < 300) {
+            aggroA = true;
+        }
+
+        if (dist >= 640) {
+            aggroA = false;
+            aggroB = false;
             x = (float) (3 * Math.PI / 4);
         }
 
-        if (aggro) {
+        if (aggroA || aggroB) {
             // Update animation
             sprite.setRegion(animation.getKeyFrame(getStateTime(), true));
 
             // Update velocity
             x = x > 2.0f * Math.PI ? 0 : x + (float) Math.toRadians(1.0f);
 
-            vel = A * (float) Math.sin(x * 0.5f) + (getMaxVel() - A);
+            vel = A * (float) Math.sin(x * k) + (getMaxVel() - A);
 
             // Attack player
             sprite.translate(vel * (float) Math.cos(getTheta()) * delta, vel * (float) Math.sin(getTheta()) * delta);

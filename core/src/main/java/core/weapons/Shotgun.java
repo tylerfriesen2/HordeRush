@@ -12,7 +12,7 @@ public class Shotgun extends RangedWeapon {
     public Shotgun() {
         setName("Shotgun");
         setCooldown(750);
-        setLifetime(400);
+        setLifetime(300);
         setDamage(0.6f);
         setVel(600.0f);
         setAmmo(12);

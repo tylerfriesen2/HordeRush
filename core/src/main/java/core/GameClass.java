@@ -18,7 +18,6 @@ public class GameClass extends Game {
 	private static HashMap<String, String> assets;
 	private SpriteBatch[] batches;
 	private FitViewport viewport;
-	private static ActionHandler actionHandler;
 	private static FreeTypeFontGenerator fontGenerator;
 
 	@Override
@@ -27,7 +26,6 @@ public class GameClass extends Game {
 		batches = new SpriteBatch[3];
 		assetManager = new AssetManager();
 		assets = new HashMap<>();
-		actionHandler = new ActionHandler();
 
 		for (int i = 0; i < batches.length; ++i) {
 			batches[i] = new SpriteBatch();
@@ -122,10 +120,6 @@ public class GameClass extends Game {
 	}
 
 	public Viewport getViewport() { return viewport; }
-
-	public static ActionHandler getActionHandler() {
-		return actionHandler;
-	}
 
 	public static FreeTypeFontGenerator getFontGenerator() {
 		return fontGenerator;

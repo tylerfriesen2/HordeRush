@@ -50,6 +50,7 @@ public class Player extends Entity {
 
     public void update(Ref.Direction direction, float xvel, float yvel) {
         sprite.translate(xvel, yvel);
+
         switch (direction) {
             case UP:
                 sprite.setTexture(textures[0]);

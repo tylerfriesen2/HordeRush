@@ -12,7 +12,7 @@ public class Pistol extends RangedWeapon {
         setCooldown(300);
         setDamage(1.5f);
         setLifetime(3000);
-        setVel(5.0f);
+        setVel(400.0f);
         setAmmo(17);
         setMagazine(17);
         setRounds(42);

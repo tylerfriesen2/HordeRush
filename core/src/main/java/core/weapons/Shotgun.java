@@ -14,10 +14,10 @@ public class Shotgun extends RangedWeapon {
         setCooldown(750);
         setLifetime(400);
         setDamage(0.6f);
-        setVel(9.5f);
+        setVel(600.0f);
         setAmmo(12);
         setMagazine(12);
-        setRounds(6);
+        setRounds(12);
         setReloadtime(2.0f);
         setSemi(true);
     }

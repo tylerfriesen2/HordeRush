@@ -4,7 +4,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Rectangle;
 import core.GameClass;
 import core.utils.Point;
 
@@ -12,7 +11,7 @@ public class Runner extends Enemy {
 
     private static final int FRAME_COLS = 2, FRAME_ROWS = 1;
 
-    float vel = 0.5f;
+    float vel = 0.0f, x = 0.0f, A = 24.0f;
 
     Animation<TextureRegion> animation;
     Texture downTexture;
@@ -20,8 +19,8 @@ public class Runner extends Enemy {
     public Runner(float x, float y) {
         super();
 
-        setVel(1.25f);
-        setMaxhealth(3.0f);
+        setMaxVel(60.0f);
+        setMaxHealth(2.0f);
         setHealth(getMaxhealth());
         setDamage(1.0f);
         if (GameClass.getAssetManager().isLoaded(GameClass.getAssets().get("zombie"), Texture.class)) {
@@ -52,19 +51,24 @@ public class Runner extends Enemy {
         float dist = Point.distance(new Point(sprite.getX(), sprite.getY()), new Point(playerx, playery));
 
         // Check if this enemy should be aggro
-        if (dist < 200 || damaged) {
+        if (dist < 400) {
+            aggro = true;
+        } else if (dist >= 640) {
+            aggro = false;
+            x = (float) (3 * Math.PI / 4);
+        }
+
+        if (aggro) {
             // Update animation
             sprite.setRegion(animation.getKeyFrame(getStateTime(), true));
 
-            // Update running speed
-            if (vel < getVel()) {
-                vel *= 1.01f;
-            } else {
-                vel = getVel();
-            }
+            // Update velocity
+            x = x > 2.0f * Math.PI ? 0 : x + (float) Math.toRadians(1.0f);
+
+            vel = A * (float) Math.sin(x * 0.5f) + (getMaxVel() - A);
 
             // Attack player
-            sprite.translate(vel * (float) Math.cos(getTheta()), vel * (float) Math.sin(getTheta()));
+            sprite.translate(vel * (float) Math.cos(getTheta()) * delta, vel * (float) Math.sin(getTheta()) * delta);
         }
     }
 }

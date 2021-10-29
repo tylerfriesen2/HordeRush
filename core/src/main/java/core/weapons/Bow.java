@@ -13,7 +13,7 @@ public class Bow extends RangedWeapon {
         setCooldown(0);
         setDamage(5.0f);
         setLifetime(2000);
-        setVel(4.0f);
+        setVel(200.0f);
         setAmmo(1);
         setMagazine(1);
         setRounds(50);

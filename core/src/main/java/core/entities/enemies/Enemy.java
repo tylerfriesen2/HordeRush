@@ -12,8 +12,8 @@ import core.entities.Entity;
 
 public class Enemy extends Entity {
 
-    protected float health = 1, maxhealth = 1, stateTime = 0, theta = 0, vel = 0.75f, damage = 1.0f;
-    protected boolean alive = true, dangerous = true, disposable = false, damaged = false;
+    protected float health = 1, maxhealth = 1, stateTime = 0, theta = 0, maxvel = 0.75f, damage = 1.0f;
+    protected boolean alive = true, dangerous = true, disposable = false, aggro = false;
     protected Sprite healthbar;
 
     public Enemy() {
@@ -78,7 +78,7 @@ public class Enemy extends Entity {
         return maxhealth;
     }
 
-    public void setMaxhealth(float maxhealth) {
+    public void setMaxHealth(float maxhealth) {
         this.maxhealth = maxhealth;
     }
 
@@ -92,7 +92,7 @@ public class Enemy extends Entity {
 
     public void damage(float amount) {
         health -= amount;
-        damaged = true;
+        aggro = true;
         sprite.setColor(new Color(1.0f, 0.5f, 0.5f, 1.0f));
         Timer.schedule(new Timer.Task() {
             @Override
@@ -118,12 +118,12 @@ public class Enemy extends Entity {
         this.theta = theta;
     }
 
-    public float getVel() {
-        return vel;
+    public float getMaxVel() {
+        return maxvel;
     }
 
-    public void setVel(float vel) {
-        this.vel = vel;
+    public void setMaxVel(float maxvel) {
+        this.maxvel = maxvel;
     }
 
     public boolean isAlive() {

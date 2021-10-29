@@ -17,11 +17,11 @@ public class Projectile {
         spawn = System.currentTimeMillis();
     }
 
-    public void update() {
+    public void update(float delta) {
         float alpha = 1 - (float) (System.currentTimeMillis() - spawn) / lifetime;
 
         sprite.setAlpha(MathUtils.clamp(alpha, 0, 1));
-        sprite.translate((float) (vel * Math.cos(theta)), (float) (vel * Math.sin(theta)));
+        sprite.translate((float) (vel * Math.cos(theta) * delta), (float) (vel * Math.sin(theta) * delta));
 
         if (System.currentTimeMillis() - spawn > lifetime) {
             alive = false;

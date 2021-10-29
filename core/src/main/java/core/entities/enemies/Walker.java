@@ -12,16 +12,16 @@ public class Walker extends Enemy {
 
     private static final int FRAME_COLS = 2, FRAME_ROWS = 1;
 
-    float dragvel = 0.1f;
-
     Animation<TextureRegion> animation;
     Texture downTexture;
+
+    float vel = 0.0f, x = (float) (3 * Math.PI / 4);;
 
     public Walker(float x, float y) {
         super();
 
-        setVel(0.65f);
-        setMaxhealth(2.0f);
+        setMaxVel(12.0f);
+        setMaxHealth(4.0f);
         setHealth(getMaxhealth());
         setDamage(2.0f);
         if (GameClass.getAssetManager().isLoaded(GameClass.getAssets().get("zombie"), Texture.class)) {
@@ -52,19 +52,24 @@ public class Walker extends Enemy {
         float dist = Point.distance(new Point(sprite.getX(), sprite.getY()), new Point(playerx, playery));
 
         // Check if this enemy should be aggro
-        if (dist < 200 || damaged) {
+        if (dist < 200) {
+            aggro = true;
+        } else if (dist >= 640) {
+            aggro = false;
+            x = (float) (3 * Math.PI / 4);
+        }
+
+        if (aggro) {
             // Update animation
             sprite.setRegion(animation.getKeyFrame(getStateTime(), true));
 
-            // Update dragging speed
-            if (dragvel >= getVel()) {
-                dragvel = 0.075f;
-            } else {
-                dragvel *= 1.02f;
-            }
+            // Update velocity
+            x = x > 2.0f * Math.PI ? 0 : x + (float) Math.toRadians(1.0f);
+
+            vel = getMaxVel() * (float) Math.sin(x * 4) + (0.1f + getMaxVel());
 
             // Attack player
-            sprite.translate(dragvel * (float) Math.cos(getTheta()), dragvel * (float) Math.sin(getTheta()));
+            sprite.translate(vel * (float) Math.cos(getTheta()) * delta, vel * (float) Math.sin(getTheta()) * delta);
         }
     }
 
